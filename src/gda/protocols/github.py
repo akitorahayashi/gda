@@ -19,6 +19,7 @@ class AssetInfo:
 class ReleaseInfo:
     """GitHub release metadata."""
 
+    id: int
     tag_name: str
     name: str
     assets: list[AssetInfo]

@@ -21,6 +21,7 @@ class MockGitHubClient:
         repo: str,
         tag: str,
         assets: list[tuple[str, bytes]] | None = None,
+        release_id: int = 1,
     ) -> ReleaseInfo:
         """Add a mock release.
 
@@ -28,6 +29,7 @@ class MockGitHubClient:
             repo: Repository in "owner/repo" format.
             tag: Release tag name.
             assets: List of (name, content) tuples.
+            release_id: Mock release ID.
 
         Returns:
             Created release info.
@@ -45,7 +47,7 @@ class MockGitHubClient:
                 )
             )
 
-        release = ReleaseInfo(tag_name=tag, name=tag, assets=asset_list)
+        release = ReleaseInfo(id=release_id, tag_name=tag, name=tag, assets=asset_list)
         self.releases[(repo, tag)] = release
         return release
 
@@ -101,7 +103,7 @@ class MockGitHubClient:
         Returns:
             Created release metadata.
         """
-        release = ReleaseInfo(tag_name=tag, name=name, assets=[])
+        release = ReleaseInfo(id=1, tag_name=tag, name=name, assets=[])
         self.releases[(repo, tag)] = release
         return release
 

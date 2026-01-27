@@ -104,7 +104,7 @@ def _push_impl(manifest_path: Path, force: bool, dry_run: bool) -> None:
         # Check existing assets
         existing = {asset.name for asset in release.assets}
 
-        for name, (zip_path, sha256) in archives.items():
+        for _name, (zip_path, _sha256) in archives.items():
             asset_name = zip_path.name
 
             if asset_name in existing and not force:
@@ -116,10 +116,9 @@ def _push_impl(manifest_path: Path, force: bool, dry_run: bool) -> None:
             console.print(f"[dim]↑[/dim] Uploading {asset_name}...")
             content = zip_path.read_bytes()
 
-            # Note: In production, we'd delete existing asset first if force=True
             client.upload_asset(
                 manifest.repository,
-                release.tag_name,  # type: ignore
+                release.id,
                 asset_name,
                 content,
                 "application/zip",

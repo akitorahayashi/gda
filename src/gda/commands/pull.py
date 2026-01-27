@@ -72,6 +72,7 @@ def _pull_impl(manifest_path: Path, force: bool, prune: bool) -> None:
     archive = ArchiveService()
     sync = SyncService(client, archive, working_dir)
 
+    lockfile_updated = False
     try:
         console.print(f"\n[bold]Pulling {len(lockfile.assets)} assets...[/bold]\n")
 
@@ -89,8 +90,18 @@ def _pull_impl(manifest_path: Path, force: bool, prune: bool) -> None:
             files = sync.pull_asset(asset, dest, force=force)
             console.print(f"[green]✓[/green] {name} ({len(files)} files)")
 
+            # Update lockfile with extracted files
+            if asset.files != files:
+                asset.files = files
+                lockfile_updated = True
+
             if prune:
                 sync._prune_directory(dest, set(files))
+
+        # Persist updated lockfile
+        if lockfile_updated:
+            lockfile.save(lockfile_path)
+            console.print("[dim]Updated lockfile with file lists[/dim]")
 
         console.print("\n[green]✓[/green] Pull complete")
 

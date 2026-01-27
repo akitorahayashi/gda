@@ -86,6 +86,7 @@ class GitHubClient:
             for asset in data.get("assets", [])
         ]
         return ReleaseInfo(
+            id=data["id"],
             tag_name=data["tag_name"],
             name=data.get("name") or data["tag_name"],
             assets=assets,
