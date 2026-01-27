@@ -1,5 +1,5 @@
 """Mock implementations for testing."""
 
-from dev.mocks.item_storage import MockItemStorage
+from dev.mocks.github import MockGitHubClient
 
-__all__ = ["MockItemStorage"]
+__all__ = ["MockGitHubClient"]

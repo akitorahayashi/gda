@@ -1,5 +1,5 @@
 # ==============================================================================
-# justfile for typ-tmpl automation
+# justfile for gda automation
 # ==============================================================================
 
 # default target
@@ -26,7 +26,7 @@ setup:
 
 # Run the CLI application
 run *args:
-    @uv run typ-tmpl {{args}}
+    @uv run gda {{args}}
 
 # ==============================================================================
 # CODE QUALITY

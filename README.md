@@ -1,76 +1,100 @@
-# typ-tmpl
+# GDA - GitHub Data Assets
 
-Minimal Python CLI template using Typer with item CRUD functionality.
+CLI tool for managing large data assets using GitHub Releases as a backend.
 
 ## Installation
 
-pipx installation is supported.
-
 ```sh
-pipx install git+https://github.com/akitorahayashi/typ-tmpl.git
+pipx install git+https://github.com/akitorahayashi/gda.git
 ```
 
-Example CLI usage:
+## Usage
+
+### Configuration
+
+Create a `gda.yaml` manifest in your project:
+
+```yaml
+repository: "owner/repo"
+version: "v1.0.0"
+
+assets:
+  raw-data:
+    source: "raw-data"
+    destination: "data/raw"
+    excludes: ["**/.DS_Store"]
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `gda resolve` | Resolve dependencies and update gda.lock |
+| `gda pull` | Synchronize local filesystem to match gda.lock |
+| `gda push` | Create archives and upload to GitHub Release |
+
+### Workflow
 
 ```sh
-typ-tmpl --version
-typ-tmpl --help
-typ-tmpl add note1 -c "My first note"
-typ-tmpl list
-typ-tmpl delete note1
+# 1. Resolve: Fetch release metadata and create lockfile
+gda resolve
+
+# 2. Pull: Download and extract assets
+gda pull
+
+# 3. Push: Upload local changes to GitHub Release
+gda push --dry-run  # Preview
+gda push            # Upload
 ```
+
+### Options
+
+```sh
+gda resolve --manifest path/to/gda.yaml
+gda pull --force              # Force re-download
+gda pull --no-prune           # Keep untracked files
+gda push --dry-run            # Preview without uploading
+gda push --force              # Overwrite existing assets
+```
+
+## File Structure
+
+- `gda.yaml` - User-defined manifest (version, repository, assets)
+- `gda.lock` - System-generated lockfile (URLs, hashes)
+- `.gda/cache/` - Downloaded asset cache
+- `.gda/build/` - Built archives for upload
 
 ## Development
 
-Local development uses uv and the justfile tasks.
-
-### Setup
-
-Setup commands commonly used:
-
 ```sh
-git clone https://github.com/akitorahayashi/typ-tmpl.git
-cd typ-tmpl
+git clone https://github.com/akitorahayashi/gda.git
+cd gda
 uv sync
+uv run gda --help
 ```
 
-### Run
-
-Example commands:
+### Testing
 
 ```sh
-uv run typ-tmpl --help
-uv run typ-tmpl add note1 -c "Hello"
-uv run typ-tmpl a note2 --content "World"  # alias
-uv run typ-tmpl list
-uv run typ-tmpl ls                          # alias
-uv run typ-tmpl delete note1
-uv run typ-tmpl rm note2                    # alias
-```
-
-### Test and Lint
-
-Common tasks:
-
-```sh
-just test    # run tests
-just check   # ruff format --check, ruff check, mypy
-just fix     # auto-format
+just test           # Run all tests
+just unit-test      # Unit tests only
+just intg-test      # Integration tests only
+just check          # Lint and type check
 ```
 
 ## Project Structure
 
 ```
-typ-tmpl/
-├── src/typ_tmpl/
+gda/
+├── src/gda/
 │   ├── __init__.py
 │   ├── __main__.py       # module entry point
 │   ├── main.py           # Typer app + container setup
 │   ├── context.py        # AppContext for DI
 │   ├── errors.py         # Application errors
-│   ├── commands/         # CLI command implementations
-│   ├── models/           # Item data models
-│   ├── protocols/        # Service protocols
+│   ├── commands/         # resolve, pull, push
+│   ├── models/           # Manifest, Lockfile
+│   ├── protocols/        # GitHubClient, ArchiveService
 │   └── services/         # Service implementations
 ├── dev/
 │   └── mocks/            # Mock implementations for testing
@@ -78,16 +102,3 @@ typ-tmpl/
 ├── justfile
 └── pyproject.toml
 ```
-
-## Commands
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `typ-tmpl add <id> -c <content>` | `a` | Add a new item |
-| `typ-tmpl list` | `ls` | List all items |
-| `typ-tmpl delete <id>` | `rm` | Delete an item |
-
-## Storage
-
-Items are stored in `~/.config/typ-tmpl/items/` as individual `.txt` files via the `ItemStorage` service.
-Item IDs do not contain path separators.
