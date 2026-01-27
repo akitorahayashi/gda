@@ -1,11 +1,12 @@
-"""Shared pytest fixtures for typ-tmpl."""
+"""Shared pytest fixtures for GDA."""
 
 import pytest
 from typer import Typer
 from typer.testing import CliRunner
 
-from dev.mocks.item_storage import MockItemStorage
-from typ_tmpl.main import app
+from dev.mocks.github import MockGitHubClient
+from gda.main import app
+from gda.services.archive import ArchiveService
 
 
 @pytest.fixture()
@@ -21,31 +22,40 @@ def typer_app() -> Typer:
 
 
 @pytest.fixture()
-def mock_item_storage() -> MockItemStorage:
-    """Provide a mock storage for testing."""
-    return MockItemStorage()
+def mock_github_client() -> MockGitHubClient:
+    """Provide a mock GitHub client for testing."""
+    return MockGitHubClient()
 
 
 @pytest.fixture()
-def app_with_mock_item_storage(mock_item_storage: MockItemStorage) -> Typer:
-    """Return app with mock storage injected via callback override."""
+def archive_service() -> ArchiveService:
+    """Provide an archive service for testing."""
+    return ArchiveService()
+
+
+@pytest.fixture()
+def app_with_mocks(mock_github_client: MockGitHubClient) -> Typer:
+    """Return app with mock services injected via callback override."""
     import typer
 
-    from typ_tmpl.context import AppContext
+    from gda.context import AppContext
+    from gda.services.archive import ArchiveService
 
-    # Create a fresh app to avoid state pollution
     test_app = typer.Typer(
-        name="typ-tmpl",
-        help="A minimal Python CLI template using Typer.",
+        name="gda",
+        help="GitHub Data Assets - Test App",
         no_args_is_help=True,
     )
 
     @test_app.callback()
     def setup(ctx: typer.Context) -> None:
-        ctx.obj = AppContext(item_storage=mock_item_storage)
+        ctx.obj = AppContext(
+            github_client=mock_github_client,
+            archive_service=ArchiveService(),
+        )
 
     # Register commands from main app
-    from typ_tmpl.main import app
+    from gda.main import app
 
     for command_info in app.registered_commands:
         if command_info.callback:

@@ -1,43 +1,47 @@
-# typ-tmpl
+# GDA - GitHub Data Assets
 
 ## Overview
 
-Minimal Typer CLI template with item CRUD functionality, protocol-based DI, and filesystem-backed item storage.
+CLI tool for managing large data assets using GitHub Releases as a backend. Functions as a package manager for data with reproducibility, idempotency, and separation of concerns.
 
 ## CLI Commands
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `typ-tmpl add <id> -c <content>` | `a` | Add a new item |
-| `typ-tmpl list` | `ls` | List all items |
-| `typ-tmpl delete <id>` | `rm` | Delete an item |
+| Command | Description |
+|---------|-------------|
+| `gda resolve` | Resolve dependencies from gda.yaml, update gda.lock |
+| `gda pull` | Synchronize local filesystem to match gda.lock |
+| `gda push` | Create archives and upload to GitHub Release |
 
 ## Package Structure
 
 ```
-src/typ_tmpl/
+src/gda/
 ├── main.py                 # Typer CLI + container setup
 ├── context.py              # AppContext dataclass (DI container)
 ├── errors.py               # Application errors
-├── commands/               # CLI command implementations
-├── models/                 # Item data models
-├── protocols/              # Service protocols
-├── services/               # Service implementations
-└── __main__.py             # Module entry point
+├── commands/               # resolve, pull, push
+├── models/                 # Manifest (gda.yaml), Lockfile (gda.lock)
+├── protocols/              # GitHubClientProtocol, ArchiveServiceProtocol
+└── services/               # GitHub, Archive, Sync implementations
 
 dev/
-└── mocks/                  # Mock implementations for testing
+└── mocks/                  # MockGitHubClient for testing
 ```
 
 ## Dependency Injection
 
-`ctx.obj` holds `AppContext` with `item_storage`.
+`ctx.obj` holds `AppContext` with `github_client` and `archive_service`.
 
 ## Protocols and Services
 
-`ItemStorageProtocol` defines the interface used by `ItemStorage` and `MockItemStorage`.
-Item IDs are validated to reject path separators.
+- `GitHubClientProtocol`: GitHub API operations (releases, assets)
+- `ArchiveServiceProtocol`: Deterministic ZIP creation/extraction
+
+## Configuration Files
+
+- `gda.yaml`: User manifest (repository, version, assets)
+- `gda.lock`: System lockfile (URLs, SHA256 hashes, file lists)
 
 ## Testing
 
-`MockItemStorage` lives in `dev/mocks/` and the `app_with_mock_item_storage` fixture injects it. Unit tests use `tmp_path` for `ItemStorage`.
+`MockGitHubClient` in `dev/mocks/` provides isolated testing. Unit tests cover models and archive service. Integration tests cover CLI commands.

@@ -1,4 +1,4 @@
-"""Typer CLI application entry point for typ-tmpl."""
+"""Typer CLI application entry point for GDA."""
 
 from importlib import metadata
 from typing import Optional
@@ -6,9 +6,10 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from typ_tmpl.commands import add, delete, list_items
-from typ_tmpl.context import AppContext
-from typ_tmpl.services.item_storage import ItemStorage
+from gda.commands import pull, push, resolve
+from gda.context import AppContext
+from gda.services.archive import ArchiveService
+from gda.services.github import GitHubClient
 
 console = Console()
 
@@ -32,14 +33,14 @@ def get_safe_version(package_name: str, fallback: str = "0.1.0") -> str:
 def version_callback(value: Optional[bool]) -> None:
     """Print version and exit."""
     if value:
-        version = get_safe_version("typ-tmpl")
-        console.print(f"typ-tmpl version: {version}")
+        version = get_safe_version("gda")
+        console.print(f"gda version: {version}")
         raise typer.Exit()
 
 
 app = typer.Typer(
-    name="typ-tmpl",
-    help="A minimal Python CLI template using Typer.",
+    name="gda",
+    help="GitHub Data Assets - Manage large data assets using GitHub Releases.",
     no_args_is_help=True,
 )
 
@@ -56,22 +57,22 @@ def main(
         help="Show version and exit.",
     ),
 ) -> None:
-    """typ-tmpl - A minimal Python CLI template."""
+    """GDA - GitHub Data Assets manager."""
     if ctx.obj is None:
-        ctx.obj = AppContext(item_storage=ItemStorage())
+        ctx.obj = AppContext(
+            github_client=GitHubClient(),
+            archive_service=ArchiveService(),
+        )
 
 
-# Register add command and alias
-app.command(name="add", help=r"Add a new item. \[aliases: a]")(add)
-app.command(name="a", hidden=True)(add)
+# Register resolve command
+app.command(name="resolve", help="Resolve dependencies and update gda.lock.")(resolve)
 
-# Register list command and alias
-app.command(name="list", help=r"List all items. \[aliases: ls]")(list_items)
-app.command(name="ls", hidden=True)(list_items)
+# Register pull command
+app.command(name="pull", help="Synchronize local filesystem to match gda.lock.")(pull)
 
-# Register delete command and alias
-app.command(name="delete", help=r"Delete an item. \[aliases: rm]")(delete)
-app.command(name="rm", hidden=True)(delete)
+# Register push command
+app.command(name="push", help="Create archives and upload to GitHub Release.")(push)
 
 
 if __name__ == "__main__":
