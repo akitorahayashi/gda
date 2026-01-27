@@ -16,7 +16,7 @@ console = Console()
 def resolve(
     ctx: typer.Context,
     manifest_path: Path = typer.Option(
-        Path("gda.yaml"),
+        Path("gda.yml"),
         "--manifest",
         "-m",
         help="Path to manifest file.",

@@ -68,7 +68,7 @@ class TestPullCommand:
 
     def test_pull_missing_lockfile(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """Test pull with missing lockfile shows error."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 repository: "owner/repo"
 version: "v1.0.0"
@@ -95,7 +95,7 @@ class TestPushCommand:
 
     def test_push_dry_run(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """Test push with dry-run doesn't upload."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 repository: "owner/repo"
 version: "v1.0.0"
@@ -114,3 +114,38 @@ assets:
 
         assert result.exit_code == 0
         assert "dry run" in result.output.lower()
+
+
+class TestInitCommand:
+    """Tests for the init command."""
+
+    def test_init_creates_manifest_and_gitignore(self, cli_runner: CliRunner) -> None:
+        """Test init command creates gda.yml and .gitignore."""
+        with cli_runner.isolated_filesystem():
+            result = cli_runner.invoke(
+                app,
+                ["init"],
+                input="owner/repo\n0.1.0\n",
+            )
+
+            assert result.exit_code == 0
+            assert Path("gda.yml").exists()
+            assert Path(".gitignore").exists()
+
+            manifest = Path("gda.yml").read_text(encoding="utf-8")
+            gitignore = Path(".gitignore").read_text(encoding="utf-8")
+
+            assert 'repository: "owner/repo"' in manifest
+            assert 'version: "0.1.0"' in manifest
+            assert ".gda/" in gitignore
+
+    def test_init_alias_works(self, cli_runner: CliRunner) -> None:
+        """Test init alias command 'i' works."""
+        with cli_runner.isolated_filesystem():
+            result = cli_runner.invoke(
+                app,
+                ["i"],
+                input="owner/repo\n0.1.0\n",
+            )
+
+            assert result.exit_code == 0

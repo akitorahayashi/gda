@@ -10,9 +10,17 @@ pipx install git+https://github.com/akitorahayashi/gda.git
 
 ## Usage
 
+### Quick Start
+
+Initialize a new configuration in your project root:
+
+```sh
+gda init
+```
+
 ### Configuration
 
-Create a `gda.yaml` manifest in your project:
+Create a `gda.yml` manifest in your project:
 
 ```yaml
 repository: "owner/repo"
@@ -29,6 +37,7 @@ assets:
 
 | Command | Description |
 |---------|-------------|
+| `gda init` | Initialize GDA configuration in the current directory |
 | `gda resolve` | Resolve dependencies and update gda.lock |
 | `gda pull` | Synchronize local filesystem to match gda.lock |
 | `gda push` | Create archives and upload to GitHub Release |
@@ -36,6 +45,9 @@ assets:
 ### Workflow
 
 ```sh
+# 0. Init: create gda.yml and update .gitignore
+gda init
+
 # 1. Resolve: Fetch release metadata and create lockfile
 gda resolve
 
@@ -50,7 +62,7 @@ gda push            # Upload
 ### Options
 
 ```sh
-gda resolve --manifest path/to/gda.yaml
+gda resolve --manifest path/to/gda.yml
 gda pull --force              # Force re-download
 gda pull --no-prune           # Keep untracked files
 gda push --dry-run            # Preview without uploading
@@ -59,7 +71,7 @@ gda push --force              # Overwrite existing assets
 
 ## File Structure
 
-- `gda.yaml` - User-defined manifest (version, repository, assets)
+- `gda.yml` - User-defined manifest (version, repository, assets)
 - `gda.lock` - System-generated lockfile (URLs, hashes)
 - `.gda/cache/` - Downloaded asset cache
 - `.gda/build/` - Built archives for upload

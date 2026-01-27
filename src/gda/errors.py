@@ -8,7 +8,7 @@ class GDAError(Exception):
 
 
 class ManifestNotFoundError(GDAError):
-    """Raised when gda.yaml is not found."""
+    """Raised when gda.yml is not found."""
 
     def __init__(self, path: str) -> None:
         self.path = path
@@ -16,7 +16,7 @@ class ManifestNotFoundError(GDAError):
 
 
 class ManifestValidationError(GDAError):
-    """Raised when gda.yaml is invalid."""
+    """Raised when gda.yml is invalid."""
 
     def __init__(self, message: str) -> None:
         super().__init__(f"Invalid manifest: {message}")

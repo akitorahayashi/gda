@@ -8,7 +8,7 @@ CLI tool for managing large data assets using GitHub Releases as a backend. Func
 
 | Command | Description |
 |---------|-------------|
-| `gda resolve` | Resolve dependencies from gda.yaml, update gda.lock |
+| `gda resolve` | Resolve dependencies from gda.yml, update gda.lock |
 | `gda pull` | Synchronize local filesystem to match gda.lock |
 | `gda push` | Create archives and upload to GitHub Release |
 
@@ -20,7 +20,7 @@ src/gda/
 ├── context.py              # AppContext dataclass (DI container)
 ├── errors.py               # Application errors
 ├── commands/               # resolve, pull, push
-├── models/                 # Manifest (gda.yaml), Lockfile (gda.lock)
+├── models/                 # Manifest (gda.yml), Lockfile (gda.lock)
 ├── protocols/              # GitHubClientProtocol, ArchiveServiceProtocol
 └── services/               # GitHub, Archive, Sync implementations
 
@@ -39,7 +39,7 @@ dev/
 
 ## Configuration Files
 
-- `gda.yaml`: User manifest (repository, version, assets)
+- `gda.yml`: User manifest (repository, version, assets)
 - `gda.lock`: System lockfile (URLs, SHA256 hashes, file lists)
 
 ## Testing
