@@ -16,7 +16,7 @@ class TestInitHelpers:
         assert "assets:" in content
 
     def test_write_manifest_respects_overwrite(self, tmp_path: Path) -> None:
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("original", encoding="utf-8")
 
         written = _write_manifest(manifest_path, "new", overwrite=False)

@@ -1,4 +1,4 @@
-"""Manifest model representing gda.yaml configuration."""
+"""Manifest model representing gda.yml configuration."""
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,7 +21,7 @@ class Asset:
 
 @dataclass
 class Manifest:
-    """Manifest configuration from gda.yaml."""
+    """Manifest configuration from gda.yml."""
 
     repository: str
     version: str
@@ -32,7 +32,7 @@ class Manifest:
         """Load manifest from a YAML file.
 
         Args:
-            path: Path to gda.yaml.
+            path: Path to gda.yml.
 
         Returns:
             Parsed Manifest.
@@ -109,7 +109,7 @@ class Manifest:
         """Save manifest to a YAML file.
 
         Args:
-            path: Path to write gda.yaml.
+            path: Path to write gda.yml.
         """
         data = {
             "repository": self.repository,

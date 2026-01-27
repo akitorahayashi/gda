@@ -13,7 +13,7 @@ class TestManifest:
 
     def test_load_valid_manifest(self, tmp_path: Path) -> None:
         """Test loading a valid manifest file."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 repository: "owner/repo"
 version: "v1.0.0"
@@ -45,7 +45,7 @@ assets:
 
     def test_load_manifest_missing_repository(self, tmp_path: Path) -> None:
         """Test manifest without repository field raises error."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 version: "v1.0.0"
 assets: {}
@@ -58,7 +58,7 @@ assets: {}
 
     def test_load_manifest_missing_version(self, tmp_path: Path) -> None:
         """Test manifest without version field raises error."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 repository: "owner/repo"
 assets: {}
@@ -71,7 +71,7 @@ assets: {}
 
     def test_load_manifest_missing_asset_destination(self, tmp_path: Path) -> None:
         """Test asset without destination field raises error."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 repository: "owner/repo"
 version: "v1.0.0"
@@ -87,7 +87,7 @@ assets:
 
     def test_load_manifest_default_source(self, tmp_path: Path) -> None:
         """Test that source defaults to asset name."""
-        manifest_path = tmp_path / "gda.yaml"
+        manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
 repository: "owner/repo"
 version: "v1.0.0"
@@ -115,7 +115,7 @@ assets:
             },
         )
 
-        output_path = tmp_path / "gda.yaml"
+        output_path = tmp_path / "gda.yml"
         manifest.save(output_path)
 
         # Reload and verify

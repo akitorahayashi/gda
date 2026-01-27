@@ -80,7 +80,7 @@ def init(
 ) -> None:
     """Initialize GDA in the current directory."""
     _ = ctx
-    manifest_path = Path("gda.yaml")
+    manifest_path = Path("gda.yml")
 
     if repository is None:
         repository = typer.prompt("Repository (owner/repo)")
@@ -91,16 +91,15 @@ def init(
     overwrite = True
     if manifest_path.exists() and not yes:
         overwrite = typer.confirm(
-            "gda.yaml already exists. Overwrite?",
+            "gda.yml already exists. Overwrite?",
             default=False,
         )
 
-    if not overwrite:
-        console.print("[yellow]Skipped writing gda.yaml[/yellow]")
+    content = _render_manifest(repository, version)
+    if not _write_manifest(manifest_path, content, overwrite=overwrite):
+        console.print("[yellow]Skipped writing gda.yml[/yellow]")
         raise typer.Exit()
 
-    content = _render_manifest(repository, version)
-    _write_manifest(manifest_path, content, overwrite=True)
     console.print(f"[green]✓[/green] Wrote {manifest_path}")
 
     if _ensure_gitignore(Path(".gitignore")):

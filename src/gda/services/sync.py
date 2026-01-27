@@ -23,7 +23,7 @@ class SyncService:
         Args:
             github_client: GitHub API client.
             archive_service: Archive service for extraction.
-            working_dir: Working directory (where gda.yaml lives).
+            working_dir: Working directory (where gda.yml lives).
         """
         self.github_client = github_client
         self.archive_service = archive_service
