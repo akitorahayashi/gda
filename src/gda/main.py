@@ -6,7 +6,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from gda.commands import pull, push, resolve
+from gda.commands import init, pull, push, resolve
 from gda.context import AppContext
 from gda.services.archive import ArchiveService
 from gda.services.github import GitHubClient
@@ -73,6 +73,10 @@ app.command(name="pull", help="Synchronize local filesystem to match gda.lock.")
 
 # Register push command
 app.command(name="push", help="Create archives and upload to GitHub Release.")(push)
+
+# Register init command
+app.command(name="init", help="Initialize GDA configuration.")(init)
+app.command(name="i", hidden=True, help="Alias for init.")(init)
 
 
 if __name__ == "__main__":

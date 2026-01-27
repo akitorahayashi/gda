@@ -114,3 +114,38 @@ assets:
 
         assert result.exit_code == 0
         assert "dry run" in result.output.lower()
+
+
+class TestInitCommand:
+    """Tests for the init command."""
+
+    def test_init_creates_manifest_and_gitignore(self, cli_runner: CliRunner) -> None:
+        """Test init command creates gda.yaml and .gitignore."""
+        with cli_runner.isolated_filesystem():
+            result = cli_runner.invoke(
+                app,
+                ["init"],
+                input="owner/repo\n0.1.0\n",
+            )
+
+            assert result.exit_code == 0
+            assert Path("gda.yaml").exists()
+            assert Path(".gitignore").exists()
+
+            manifest = Path("gda.yaml").read_text(encoding="utf-8")
+            gitignore = Path(".gitignore").read_text(encoding="utf-8")
+
+            assert 'repository: "owner/repo"' in manifest
+            assert 'version: "0.1.0"' in manifest
+            assert ".gda/" in gitignore
+
+    def test_init_alias_works(self, cli_runner: CliRunner) -> None:
+        """Test init alias command 'i' works."""
+        with cli_runner.isolated_filesystem():
+            result = cli_runner.invoke(
+                app,
+                ["i"],
+                input="owner/repo\n0.1.0\n",
+            )
+
+            assert result.exit_code == 0

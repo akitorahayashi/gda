@@ -10,6 +10,14 @@ pipx install git+https://github.com/akitorahayashi/gda.git
 
 ## Usage
 
+### Quick Start
+
+Initialize a new configuration in your project root:
+
+```sh
+gda init
+```
+
 ### Configuration
 
 Create a `gda.yaml` manifest in your project:
@@ -29,6 +37,7 @@ assets:
 
 | Command | Description |
 |---------|-------------|
+| `gda init` | Initialize GDA configuration in the current directory |
 | `gda resolve` | Resolve dependencies and update gda.lock |
 | `gda pull` | Synchronize local filesystem to match gda.lock |
 | `gda push` | Create archives and upload to GitHub Release |
@@ -36,6 +45,9 @@ assets:
 ### Workflow
 
 ```sh
+# 0. Init: create gda.yaml and update .gitignore
+gda init
+
 # 1. Resolve: Fetch release metadata and create lockfile
 gda resolve
 
