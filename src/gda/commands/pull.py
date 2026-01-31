@@ -5,9 +5,13 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from gda.errors import GDAError
+from gda.commands.resolve import _resolve_impl
+from gda.context import AppContext
+from gda.errors import GDAError, LockfileNotFoundError
 from gda.models.lockfile import Lockfile
 from gda.models.manifest import Manifest
+from gda.protocols.archive import ArchiveServiceProtocol
+from gda.protocols.github import GitHubClientProtocol
 from gda.services.archive import ArchiveService
 from gda.services.github import GitHubClient
 from gda.services.sync import SyncService
@@ -40,13 +44,15 @@ def pull(
     Downloads and extracts assets, verifying hashes against the lockfile.
     """
     try:
-        _pull_impl(manifest_path, force=force, prune=not no_prune)
+        _pull_impl(ctx, manifest_path, force=force, prune=not no_prune)
     except GDAError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1)
 
 
-def _pull_impl(manifest_path: Path, force: bool, prune: bool) -> None:
+def _pull_impl(
+    ctx: typer.Context, manifest_path: Path, force: bool, prune: bool
+) -> None:
     """Implementation of pull command."""
     lockfile_path = manifest_path.parent / "gda.lock"
 
@@ -54,13 +60,20 @@ def _pull_impl(manifest_path: Path, force: bool, prune: bool) -> None:
     manifest = Manifest.load(manifest_path)
 
     console.print(f"[dim]Loading lockfile from {lockfile_path}...[/dim]")
-    lockfile = Lockfile.load(lockfile_path)
-
-    if lockfile.version != manifest.version:
-        console.print(
-            f"[yellow]⚠[/yellow] Lockfile version ({lockfile.version}) "
-            f"differs from manifest ({manifest.version}). Run 'gda resolve'."
-        )
+    lockfile: Lockfile | None = None
+    try:
+        lockfile = Lockfile.load(lockfile_path)
+    except LockfileNotFoundError:
+        pass  # Handled below
+    if lockfile is None or lockfile.version != manifest.version:
+        if lockfile is None:
+            console.print("[dim]Lockfile missing. Resolving release metadata...[/dim]")
+        else:
+            console.print(
+                "[dim]Lockfile version mismatch. Resolving release metadata...[/dim]"
+            )
+        _resolve_impl(ctx, manifest_path)
+        lockfile = Lockfile.load(lockfile_path)
 
     # Build destination map
     working_dir = manifest_path.parent.resolve()
@@ -68,8 +81,17 @@ def _pull_impl(manifest_path: Path, force: bool, prune: bool) -> None:
         name: working_dir / asset.destination for name, asset in manifest.assets.items()
     }
 
-    client = GitHubClient()
-    archive = ArchiveService()
+    context = ctx.obj if isinstance(ctx.obj, AppContext) else None
+    client: GitHubClientProtocol
+    archive: ArchiveServiceProtocol
+    client_to_close: GitHubClient | None = None
+    if context is None:
+        client = GitHubClient()
+        archive = ArchiveService()
+        client_to_close = client
+    else:
+        client = context.github_client
+        archive = context.archive_service
     sync = SyncService(client, archive, working_dir)
 
     lockfile_updated = False
@@ -106,4 +128,5 @@ def _pull_impl(manifest_path: Path, force: bool, prune: bool) -> None:
         console.print("\n[green]✓[/green] Pull complete")
 
     finally:
-        client.close()
+        if client_to_close is not None:
+            client_to_close.close()

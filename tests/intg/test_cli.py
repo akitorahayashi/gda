@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from typer import Typer
 from typer.testing import CliRunner
 
 from gda.main import app
@@ -66,7 +67,9 @@ class TestPullCommand:
         assert result.exit_code == 1
         assert "not found" in result.output.lower() or "Error" in result.output
 
-    def test_pull_missing_lockfile(self, cli_runner: CliRunner, tmp_path: Path) -> None:
+    def test_pull_missing_lockfile(
+        self, cli_runner: CliRunner, tmp_path: Path, app_with_mocks: Typer
+    ) -> None:
         """Test pull with missing lockfile shows error."""
         manifest_path = tmp_path / "gda.yml"
         manifest_path.write_text("""
@@ -77,10 +80,13 @@ assets:
     destination: "output"
 """)
 
-        result = cli_runner.invoke(app, ["pull", "-m", str(manifest_path)])
+        result = cli_runner.invoke(app_with_mocks, ["pull", "-m", str(manifest_path)])
 
         assert result.exit_code == 1
-        assert "resolve" in result.output.lower() or "lock" in result.output.lower()
+        assert (
+            "release not found" in result.output.lower()
+            or "not found" in result.output.lower()
+        )
 
 
 class TestPushCommand:

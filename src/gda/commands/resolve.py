@@ -5,9 +5,11 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from gda.context import AppContext
 from gda.errors import GDAError
 from gda.models.lockfile import LockedAsset, Lockfile
 from gda.models.manifest import Manifest
+from gda.protocols.github import GitHubClientProtocol
 from gda.services.github import GitHubClient
 
 console = Console()
@@ -28,20 +30,27 @@ def resolve(
     with exact URLs and hashes for each asset.
     """
     try:
-        _resolve_impl(manifest_path)
+        _resolve_impl(ctx, manifest_path)
     except GDAError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1)
 
 
-def _resolve_impl(manifest_path: Path) -> None:
+def _resolve_impl(ctx: typer.Context, manifest_path: Path) -> None:
     """Implementation of resolve command."""
     console.print(f"[dim]Loading manifest from {manifest_path}...[/dim]")
     manifest = Manifest.load(manifest_path)
 
     console.print(f"[dim]Resolving {manifest.repository}@{manifest.version}...[/dim]")
 
-    client = GitHubClient()
+    context = ctx.obj if isinstance(ctx.obj, AppContext) else None
+    client: GitHubClientProtocol
+    client_to_close: GitHubClient | None = None
+    if context is None:
+        client = GitHubClient()
+        client_to_close = client
+    else:
+        client = context.github_client
     try:
         release = client.get_release(manifest.repository, manifest.version)
         console.print(f"[green]✓[/green] Found release: {release.name}")
@@ -52,7 +61,7 @@ def _resolve_impl(manifest_path: Path) -> None:
         locked_assets: dict[str, LockedAsset] = {}
 
         for name, asset in manifest.assets.items():
-            zip_name = f"{asset.source}.zip"
+            zip_name = f"{name}.zip"
 
             if zip_name not in release_assets:
                 console.print(
@@ -79,4 +88,5 @@ def _resolve_impl(manifest_path: Path) -> None:
         console.print(f"\n[green]✓[/green] Wrote {lockfile_path}")
 
     finally:
-        client.close()
+        if client_to_close is not None:
+            client_to_close.close()

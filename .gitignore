@@ -75,3 +75,9 @@ Desktop.ini
 
 # Temporary files
 .tmp/*
+
+# GDA artifacts
+.gda/
+
+# Dogfood install output
+dogfood/installed/
