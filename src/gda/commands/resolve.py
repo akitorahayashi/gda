@@ -9,6 +9,7 @@ from gda.context import AppContext
 from gda.errors import GDAError
 from gda.models.lockfile import LockedAsset, Lockfile
 from gda.models.manifest import Manifest
+from gda.protocols.github import GitHubClientProtocol
 from gda.services.github import GitHubClient
 
 console = Console()
@@ -43,12 +44,13 @@ def _resolve_impl(ctx: typer.Context, manifest_path: Path) -> None:
     console.print(f"[dim]Resolving {manifest.repository}@{manifest.version}...[/dim]")
 
     context = ctx.obj if isinstance(ctx.obj, AppContext) else None
+    client: GitHubClientProtocol
+    client_to_close: GitHubClient | None = None
     if context is None:
         client = GitHubClient()
-        owns_client = True
+        client_to_close = client
     else:
         client = context.github_client
-        owns_client = False
     try:
         release = client.get_release(manifest.repository, manifest.version)
         console.print(f"[green]✓[/green] Found release: {release.name}")
@@ -86,5 +88,5 @@ def _resolve_impl(ctx: typer.Context, manifest_path: Path) -> None:
         console.print(f"\n[green]✓[/green] Wrote {lockfile_path}")
 
     finally:
-        if owns_client and hasattr(client, "close"):
-            client.close()
+        if client_to_close is not None:
+            client_to_close.close()

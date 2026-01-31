@@ -8,6 +8,8 @@ from rich.console import Console
 from gda.context import AppContext
 from gda.errors import GDAError
 from gda.models.manifest import Manifest
+from gda.protocols.archive import ArchiveServiceProtocol
+from gda.protocols.github import GitHubClientProtocol
 from gda.services.archive import ArchiveService
 from gda.services.github import GitHubClient
 
@@ -56,6 +58,7 @@ def _push_impl(
 
     working_dir = manifest_path.parent.resolve()
     context = ctx.obj if isinstance(ctx.obj, AppContext) else None
+    archive: ArchiveServiceProtocol
     if context is None:
         archive = ArchiveService()
     else:
@@ -90,12 +93,13 @@ def _push_impl(
         return
 
     # Upload to GitHub
+    client: GitHubClientProtocol
+    client_to_close: GitHubClient | None = None
     if context is None:
         client = GitHubClient()
-        owns_client = True
+        client_to_close = client
     else:
         client = context.github_client
-        owns_client = False
     try:
         console.print(
             f"\n[bold]Uploading to {manifest.repository}@{manifest.version}...[/bold]\n"
@@ -140,5 +144,5 @@ def _push_impl(
         console.print("\n[green]✓[/green] Push complete")
 
     finally:
-        if owns_client and hasattr(client, "close"):
-            client.close()
+        if client_to_close is not None:
+            client_to_close.close()

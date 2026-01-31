@@ -10,6 +10,8 @@ from gda.context import AppContext
 from gda.errors import GDAError, LockfileNotFoundError
 from gda.models.lockfile import Lockfile
 from gda.models.manifest import Manifest
+from gda.protocols.archive import ArchiveServiceProtocol
+from gda.protocols.github import GitHubClientProtocol
 from gda.services.archive import ArchiveService
 from gda.services.github import GitHubClient
 from gda.services.sync import SyncService
@@ -61,9 +63,7 @@ def _pull_impl(
     try:
         lockfile = Lockfile.load(lockfile_path)
     except LockfileNotFoundError:
-        console.print(
-            "[dim]Lockfile missing. Resolving release metadata...[/dim]"
-        )
+        console.print("[dim]Lockfile missing. Resolving release metadata...[/dim]")
         _resolve_impl(ctx, manifest_path)
         lockfile = Lockfile.load(lockfile_path)
 
@@ -81,14 +81,16 @@ def _pull_impl(
     }
 
     context = ctx.obj if isinstance(ctx.obj, AppContext) else None
+    client: GitHubClientProtocol
+    archive: ArchiveServiceProtocol
+    client_to_close: GitHubClient | None = None
     if context is None:
         client = GitHubClient()
         archive = ArchiveService()
-        owns_client = True
+        client_to_close = client
     else:
         client = context.github_client
         archive = context.archive_service
-        owns_client = False
     sync = SyncService(client, archive, working_dir)
 
     lockfile_updated = False
@@ -125,5 +127,5 @@ def _pull_impl(
         console.print("\n[green]✓[/green] Pull complete")
 
     finally:
-        if owns_client and hasattr(client, "close"):
-            client.close()
+        if client_to_close is not None:
+            client_to_close.close()

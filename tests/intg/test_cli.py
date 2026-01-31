@@ -83,7 +83,10 @@ assets:
         result = cli_runner.invoke(app_with_mocks, ["pull", "-m", str(manifest_path)])
 
         assert result.exit_code == 1
-        assert "release not found" in result.output.lower() or "not found" in result.output.lower()
+        assert (
+            "release not found" in result.output.lower()
+            or "not found" in result.output.lower()
+        )
 
 
 class TestPushCommand:
