@@ -60,17 +60,18 @@ def _pull_impl(
     manifest = Manifest.load(manifest_path)
 
     console.print(f"[dim]Loading lockfile from {lockfile_path}...[/dim]")
+    lockfile: Lockfile | None = None
     try:
         lockfile = Lockfile.load(lockfile_path)
     except LockfileNotFoundError:
-        console.print("[dim]Lockfile missing. Resolving release metadata...[/dim]")
-        _resolve_impl(ctx, manifest_path)
-        lockfile = Lockfile.load(lockfile_path)
-
-    if lockfile.version != manifest.version:
-        console.print(
-            "[dim]Lockfile version mismatch. Resolving release metadata...[/dim]"
-        )
+        pass  # Handled below
+    if lockfile is None or lockfile.version != manifest.version:
+        if lockfile is None:
+            console.print("[dim]Lockfile missing. Resolving release metadata...[/dim]")
+        else:
+            console.print(
+                "[dim]Lockfile version mismatch. Resolving release metadata...[/dim]"
+            )
         _resolve_impl(ctx, manifest_path)
         lockfile = Lockfile.load(lockfile_path)
 
