@@ -5,6 +5,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from gda.context import AppContext
 from gda.errors import GDAError
 from gda.models.manifest import Manifest
 from gda.services.archive import ArchiveService
@@ -40,19 +41,25 @@ def push(
     them to the specified release.
     """
     try:
-        _push_impl(manifest_path, force=force, dry_run=dry_run)
+        _push_impl(ctx, manifest_path, force=force, dry_run=dry_run)
     except GDAError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1)
 
 
-def _push_impl(manifest_path: Path, force: bool, dry_run: bool) -> None:
+def _push_impl(
+    ctx: typer.Context, manifest_path: Path, force: bool, dry_run: bool
+) -> None:
     """Implementation of push command."""
     console.print(f"[dim]Loading manifest from {manifest_path}...[/dim]")
     manifest = Manifest.load(manifest_path)
 
     working_dir = manifest_path.parent.resolve()
-    archive = ArchiveService()
+    context = ctx.obj if isinstance(ctx.obj, AppContext) else None
+    if context is None:
+        archive = ArchiveService()
+    else:
+        archive = context.archive_service
     build_dir = working_dir / ".gda" / "build"
     build_dir.mkdir(parents=True, exist_ok=True)
 
@@ -67,7 +74,7 @@ def _push_impl(manifest_path: Path, force: bool, dry_run: bool) -> None:
             console.print(f"[yellow]⚠[/yellow] Skipping {name}: source not found")
             continue
 
-        zip_path = build_dir / f"{asset.source}.zip"
+        zip_path = build_dir / f"{name}.zip"
         console.print(f"[dim]📦[/dim] Building {zip_path.name}...")
 
         sha256 = archive.create_zip(source_dir, zip_path, asset.excludes)
@@ -83,7 +90,12 @@ def _push_impl(manifest_path: Path, force: bool, dry_run: bool) -> None:
         return
 
     # Upload to GitHub
-    client = GitHubClient()
+    if context is None:
+        client = GitHubClient()
+        owns_client = True
+    else:
+        client = context.github_client
+        owns_client = False
     try:
         console.print(
             f"\n[bold]Uploading to {manifest.repository}@{manifest.version}...[/bold]\n"
@@ -128,4 +140,5 @@ def _push_impl(manifest_path: Path, force: bool, dry_run: bool) -> None:
         console.print("\n[green]✓[/green] Push complete")
 
     finally:
-        client.close()
+        if owns_client and hasattr(client, "close"):
+            client.close()

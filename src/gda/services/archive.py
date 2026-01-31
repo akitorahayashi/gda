@@ -117,11 +117,14 @@ class ArchiveService:
                 if info.is_dir():
                     continue
 
-                # Handle UTF-8 encoding
+                # Handle UTF-8 and CP932 encoding
                 try:
                     name = info.filename.encode("cp437").decode("utf-8")
                 except (UnicodeDecodeError, UnicodeEncodeError):
-                    name = info.filename
+                    try:
+                        name = info.filename.encode("cp437").decode("cp932")
+                    except (UnicodeDecodeError, UnicodeEncodeError):
+                        name = info.filename
 
                 target = dest_dir / name
                 target.parent.mkdir(parents=True, exist_ok=True)

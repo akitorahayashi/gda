@@ -1,0 +1,7 @@
+repository: "akitorahayashi/gda"
+version: "dogfood-v0"
+
+assets:
+  dogfood:
+    source: "dogfood/source"
+    destination: "dogfood/installed"

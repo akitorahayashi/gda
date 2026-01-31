@@ -40,6 +40,8 @@ class SyncService:
         Returns:
             True if all files exist and match, False otherwise.
         """
+        if not asset.files:
+            return False
         if not dest_dir.exists():
             return False
 
@@ -90,7 +92,13 @@ class SyncService:
         if dest_dir.exists():
             shutil.rmtree(dest_dir)
 
-        extracted = self.archive_service.extract_zip(zip_path, dest_dir)
+        try:
+            extracted = self.archive_service.extract_zip(zip_path, dest_dir)
+        finally:
+            if zip_path.exists():
+                zip_path.unlink()
+            if self._cache_dir.exists() and not any(self._cache_dir.iterdir()):
+                self._cache_dir.rmdir()
         return extracted
 
     def pull_all(
